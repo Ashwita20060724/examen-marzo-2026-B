@@ -32,15 +32,59 @@ const isFreeCommission = async (commissionId) => {
 }
 
 const checkFreeCommissionLimitDuringCreation = async (req, res, next) => {
-  return res.status(500).send("To be implemented")
+  try{
+    const restProp = await Restaurant.count({
+      where:{
+        userId: req.user.id,
+        commissionId: req.body.commissionId
+      }
+    })
+    if(restProp > 1){
+      res.status(409).send('Un propietario solo puede tener 1 restaurante con comisión gratuita')
+    }
+  } catch(error){
+    res.status(500).send(error)
+  }
 }
 
 const checkFreeCommissionLimitDuringUpdate = async (req, res, next) => {
-  return res.status(500).send("To be implemented")
+try{
+  const restProp = await Restaurant.count({
+    where: {
+      userId: req.user.id,
+      commissionId: req.body.commissionId,
+      id: { [Op.ne]: req.params.restaurantId} //Besides that restaurant, the rest
+    }
+  })
+} catch(error){
+  res.status(500).send(error)
+}
 }
 
 const checkNoOrdersWhenSwitchingToFree = async (req, res, next) => {
-  return res.status(500).send("To be implemented")
+  try{
+    //1. está intentando cambiar de opción?
+    if(await isFreeCommission(req.body.commissionId)){
+      //2. buscamos el restaurante
+      const restaurante = await Restaurant.findByPk(req.params.restauratId)
+      //3. el restaurante NO es gratis?
+      if(await isFreeCommission(restaurante.commissionId)){
+        //4. miramos cuantos pedidos lleva
+        const pedidos = await Order.count({
+          where:{
+            restauranteId: req.params.restaurantId
+          }
+        })
+        //5. si tiene 1 o más pedidos devuelve 409
+        if(pedidos > 0){
+          res.status(409).send('No se puede cambiar de plan una vez realizado un pedido')
+        }
+      }
+    }
+    next()
+  } catch(error){
+    res.status(500).send(error)
+  }
 }
 
 export { checkRestaurantOwnership, restaurantHasNoOrders, checkFreeCommissionLimitDuringCreation, checkFreeCommissionLimitDuringUpdate, checkNoOrdersWhenSwitchingToFree }

@@ -86,6 +86,17 @@ module.exports = {
           },
           key: 'id'
         }
+      },
+      //AÑADIMOS LA COMISIÓN
+      commissionId: {
+        allowNull: false,
+        type: Sequelize.DOUBLE,
+        references: {
+          model: {
+            tableName: 'Commissions'
+          },
+          key: 'id'
+        }
       }
     })
   },
