@@ -1,0 +1,108 @@
+@startuml DeliverUS_ClassDiagram
+
+skinparam classAttributeIconSize 0
+skinparam groupInheritance 2
+
+class User {
+  +firstName: String
+  +lastName: String
+  +email: String
+  +password: String
+  +token: String [0..1]
+  +tokenExpiration: Date [0..1]
+  +avatar: String [0..1]
+  +address: String
+  +postalCode: String
+  +phone: String
+}
+
+class Owner {
+}
+
+class Customer {
+}
+
+class Restaurant {
+  +name: String
+  +description: String [0..1]
+  +address: String
+  +postalCode: String
+  +url: String [0..1]
+  +shippingCosts: Double
+  +/averageServiceMinutes: Double [0..1]
+  +email: String [0..1]
+  +phone: String [0..1]
+  +logo: String [0..1]
+  +heroImage: String [0..1]
+  +status: Enum {online, offline,\n closed, temporarily closed}
+}
+
+class RestaurantCategory {
+  +name: String
+}
+
+class "**Commission**" as Commission {
+  +**name**: String
+  +**percentage**: Double
+}
+
+class Product {
+  +name: String
+  +description: String [0..1]
+  +price: Double
+  +image: String [0..1]
+  +order: Integer [0..1]
+  +availability: Boolean
+}
+
+class ProductCategory {
+  +name: String
+}
+
+class Order {
+  +createdAt: Date
+  +startedAt: Date [0..1]
+  +sentAt: Date [0..1]
+  +deliveredAt: Date [0..1]
+  +price: Double
+  +address: String
+  +shippingCosts: Double
+}
+
+class OrderProduct {
+  +quantity: Integer
+  +unityPrice: Double
+}
+
+User <|-- Customer
+User <|-- Owner
+note on link #lightgray: {complete, disjoint}
+
+Customer -[hidden]right- Owner
+
+Owner -right-> Restaurant : manages >
+Customer -right-> Order : places >
+
+Restaurant -[hidden]down-> Product
+Product -[hidden]down-> Order
+
+Restaurant "1" -- "*" Product : serves >
+Restaurant "1" -- "*" Order : delivers >
+
+RestaurantCategory "1" -- "*" Restaurant : belongsTo <
+
+Commission "1" -[bold]- "*" Restaurant : **applies to** >
+note on link
+  **RN1**: No se puede cambiar a plan gratuito
+  si tiene pedidos y era de pago.
+  **RN2**: Un propietario solo puede tener 
+  un restaurante con comisión gratuita.
+end note
+
+ProductCategory "1" -- "*" Product : belongsTo <
+
+Order "*" -- "*" Product : includes >
+(Order, Product) .. OrderProduct
+
+
+@enduml
