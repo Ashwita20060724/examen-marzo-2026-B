@@ -37,4 +37,31 @@ const checkProductHasNotBeenOrdered = async (req, res, next) => {
   }
 }
 
-export { checkProductOwnership, checkProductRestaurantOwnership, checkProductHasNotBeenOrdered }
+const checkStartProductLimit = async(req, res, next) => {
+  try{
+    const restaurante = await Restaurant.findByPk(req.body.restaurantId)
+    if(await isFreeCommission(restaurante.commissionId)){
+      res.status(409).send('No puede haber más de un producto estrella')
+    }
+    if(req.body.isStarProduct) {
+      const condiciones = {
+        restauranteId: req.body.restaurantId,
+        isStarProduct: true
+      }
+      if(req.params.productId){
+        condiciones.id = {[Op.ne]: req.params.productId}
+      }
+      const platosEstrella = await Product.count({where: condiciones})
+      if(platosEstrella > 1) {
+        res.status(409).send('No puede haber más de un producto estrella')
+      }
+    }
+    next()
+  } catch(error){
+    res.status(500).send(error)
+  }
+}
+
+export { checkProductOwnership, checkProductRestaurantOwnership, checkProductHasNotBeenOrdered,
+  checkStartProductLimit
+ }
